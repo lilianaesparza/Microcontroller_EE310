@@ -1,5 +1,5 @@
 //-----------------------------
-// Title: Temperature Control System Using PIC18
+// Title: Temperature Control System Using PIC18F
 //-----------------------------
 // Purpose: 
 // This program compares a measured temperature with a reference temperature.
