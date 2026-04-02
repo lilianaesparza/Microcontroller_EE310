@@ -14,7 +14,7 @@
 // Author: Liliana Esparza
 //
 // OUTPUTS: 
-// PORTD ? Connected to 7-segment display segments (a–g)
+// PORTD  Connected to 7-segment display segments (a–g)
 // INPUTS: 
 // PORTB.0  Increment (BTN_UP)
 // PORTB.1  Decrement (BTN_DOWN)
