@@ -32,7 +32,7 @@
 // Secret code
 // Example: 2 on PR1, then 3 on PR2
 // --------------------
-#define SECRET_DIGIT_1   2
+#define SECRET_DIGIT_1   1
 #define SECRET_DIGIT_2   3
 
 // --------------------
