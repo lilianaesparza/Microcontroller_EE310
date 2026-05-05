@@ -142,7 +142,7 @@ void main(void)
         unsigned long sum = 0;
         unsigned char i;
 
-        // 🔁 Smoothing loop
+        // Smoothing loop
         for(i = 0; i < 5; i++)
         {
             sum += ADC_ReadSoundLevel();
