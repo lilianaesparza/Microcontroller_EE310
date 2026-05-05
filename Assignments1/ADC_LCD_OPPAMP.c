@@ -116,14 +116,14 @@ void main(void)
 {
     unsigned int level;
 
-    ANSELA = 0x01;   // RA0 analog
-    ANSELB = 0x00;   // LCD data digital
-    ANSELC = 0x00;   // RC2 button digital
-    ANSELD = 0x00;   // LCD control digital
-    ANSELE = 0x00;   // RE0 LED digital
+    ANSELA = 0x01;
+    ANSELB = 0x00;
+    ANSELC = 0x00;
+    ANSELD = 0x00;
+    ANSELE = 0x00;
 
-    TRISE0 = 0;      // RE0 LED output
-    TRISC2 = 1;      // RC2 button input
+    TRISE0 = 0;
+    TRISC2 = 1;
 
     RED_LED = 0;
 
@@ -139,10 +139,21 @@ void main(void)
             Halt_10s();
         }
 
-        level = ADC_ReadSoundLevel();
+        unsigned long sum = 0;
+        unsigned char i;
+
+        // 🔁 Smoothing loop
+        for(i = 0; i < 5; i++)
+        {
+            sum += ADC_ReadSoundLevel();
+            __delay_ms(100);
+        }
+
+        level = sum / 5;
+
         DisplaySound(level);
 
-        __delay_ms(500);
+        __delay_ms(300);
     }
 }
 
@@ -153,27 +164,20 @@ void IOC_Init(void)
     ANSELC = 0x00;
     ANSELE = 0x00;
 
-    TRISE0 = 0;      // RE0 LED output
-    TRISC2 = 1;      // RC2 button input
+    TRISE0 = 0;
+    TRISC2 = 1;
 
-    // Button wiring: RC2 ---- button ---- GND
     WPUCbits.WPUC2 = 1;
 
-    // Falling edge interrupt on RC2
     IOCCNbits.IOCCN2 = 1;
     IOCCPbits.IOCCP2 = 0;
 
-    // Clear IOC flags
     IOCCFbits.IOCCF2 = 0;
     PIR0bits.IOCIF = 0;
 
-    // Enable IOC interrupt
     PIE0bits.IOCIE = 1;
 
-    // Disable priority mode
     INTCON0bits.IPEN = 0;
-
-    // Enable global interrupts
     INTCON0bits.GIE = 1;
 }
 
@@ -188,7 +192,7 @@ void __interrupt(irq(IOC), base(8)) IOC_ISR(void)
     PIR0bits.IOCIF = 0;
 }
 
-/* ================= HALT STATE ================= */
+/* ================= HALT ================= */
 
 void Halt_10s(void)
 {
@@ -197,7 +201,6 @@ void Halt_10s(void)
     LCD_String_xy(1, 0, "SYSTEM HALTED     ");
     LCD_String_xy(2, 0, "ADC paused 10 sec ");
 
-    // 20 loops x 500 ms = 10 seconds
     for(i = 0; i < 20; i++)
     {
         RED_LED = 1;
