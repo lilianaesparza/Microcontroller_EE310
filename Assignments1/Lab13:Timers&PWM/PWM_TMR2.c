@@ -5,81 +5,83 @@
 
 #define _XTAL_FREQ 4000000
 
-#define BTN_MID     PORTBbits.RB5
-#define BTN_CCW     PORTBbits.RB6
-#define BTN_CW      PORTBbits.RB7
+// ==============================
+// BUTTONS (internal pull-ups)
+// Active LOW when pressed
+// ==============================
+#define BUTTON_LEFT   PORTDbits.RD0
+#define BUTTON_RIGHT  PORTDbits.RD1
 
-#define DUTY_LEFT_LIMIT    22
-#define DUTY_MIDPOINT      51
-#define DUTY_RIGHT_LIMIT   81
+// ==============================
+// SERVO RANGE (adjusted values)
+// ==============================
+#define SERVO_MIN      10
+#define SERVO_MAX      78
 
-uint8_t dutyValue = DUTY_MIDPOINT;
-uint8_t lastDutyValue = DUTY_MIDPOINT;
-uint8_t updateDelay = 0;
-_Bool pwmLevel;
+uint8_t duty_value = 47;   // center position
 
-void updateServoPosition(void)
-{
-    if(BTN_MID == 0)
-    {
-        dutyValue = DUTY_MIDPOINT;
-    }
-    else if((BTN_CCW == 0) && (dutyValue > DUTY_LEFT_LIMIT))
-    {
-        dutyValue--;
-    }
-    else if((BTN_CW == 0) && (dutyValue < DUTY_RIGHT_LIMIT))
-    {
-        dutyValue++;
-    }
-
-    if(dutyValue != lastDutyValue)
-    {
-        PWM2_LoadDutyValue(dutyValue);
-        lastDutyValue = dutyValue;
-    }
-}
-
+// ==============================
+// MAIN
+// ==============================
 void main(void)
 {
+    // CLOCK
     OSCSTATbits.HFOR = 1;
-    OSCFRQ = 0x02;              // 4 MHz clock
+    OSCFRQ = 0x02;   // 4 MHz
 
-    ANSELB = 0x00;              // Set PORTB as digital I/O
+    // DIGITAL SETUP
+    ANSELD = 0x00;   // digital pins only
 
-    TRISBbits.TRISB2 = 0;       // Servo PWM output
-    TRISBbits.TRISB5 = 1;       // Center button
-    TRISBbits.TRISB6 = 1;       // Left button
-    TRISBbits.TRISB7 = 1;       // Right button
+    TRISDbits.TRISD0 = 1; // input
+    TRISDbits.TRISD1 = 1; // input
 
-    WPUBbits.WPUB5 = 1;
-    WPUBbits.WPUB6 = 1;
-    WPUBbits.WPUB7 = 1;
+    // ==============================
+    // INTERNAL PULL-UPS ENABLE
+    // ==============================
+    WPUDbits.WPUD0 = 1;
+    WPUDbits.WPUD1 = 1;
 
+    // PORT B OUTPUTS (PWM)
+    ANSELB = 0x00;
+    TRISB = 0x00;
+
+    // ==============================
+    // TIMER2 + PWM SETUP
+    // ==============================
     TMR2_Initialize();
-    T2PR = 155;                 // Approximately 20 ms period
     TMR2_StartTimer();
 
     PWM_Output_D8_Enable();
     PWM2_Initialize();
-    PWM2_LoadDutyValue(dutyValue);
 
+    PWM2_LoadDutyValue(duty_value);
+
+    // small stabilization delay
+    __delay_ms(300);
+
+    // ==============================
+    // MAIN LOOP
+    // ==============================
     while(1)
     {
-        pwmLevel = PWM2_OutputStatusGet();
-        PORTBbits.RB2 = pwmLevel;
-
-        if(PIR4bits.TMR2IF)
+        // RIGHT button (pressed = 0)
+        if(BUTTON_RIGHT == 0)
         {
-            PIR4bits.TMR2IF = 0;
+            if(duty_value < SERVO_MAX)
+                duty_value++;
 
-            updateDelay++;
+            PWM2_LoadDutyValue(duty_value);
+            __delay_ms(60);   // smoothing + debounce
+        }
 
-            if(updateDelay == 2)
-            {
-                updateDelay = 0;
-                updateServoPosition();
-            }
+        // LEFT button (pressed = 0)
+        else if(BUTTON_LEFT == 0)
+        {
+            if(duty_value > SERVO_MIN)
+                duty_value--;
+
+            PWM2_LoadDutyValue(duty_value);
+            __delay_ms(60);   // smoothing + debounce
         }
     }
 }
