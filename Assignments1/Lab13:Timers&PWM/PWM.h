@@ -1,7 +1,10 @@
 /* 
  * File:   PWM.h
  * Author: student
+ *
+ * Created on May 1, 2023, 9:02 AM
  */
+
 #ifndef PWM_H
 #define	PWM_H
 
@@ -37,8 +40,8 @@ void TMR2_Initialize(void)
     // T2RSEL T2CKIPPS pin; 
     T2RST = 0x00;
 
-    // PR2 255; 
-    T2PR = 0xFF;
+    // PR2 156; 
+    T2PR = 0x9C;
 
     // TMR2 0; 
     T2TMR = 0x00;
@@ -46,8 +49,10 @@ void TMR2_Initialize(void)
     // Clearing IF flag.
     PIR4bits.TMR2IF = 0;
 
-    // T2CKPS 1:1; T2OUTPS 1:1; TMR2ON on; 
-    T2CON = 0xA0;
+    // T2CKPS 1:128; T2OUTPS 1:1; TMR2ON on; 
+    T2CONbits.ON = 1;
+    T2CONbits.CKPS = 0b111; //1:128 prescale for period > 20ms
+    T2CONbits.OUTPS = 0x00;
 }
 
 //void TMR2_ModeSet(TMR2_HLT_MODE mode)
@@ -144,6 +149,8 @@ void PWM_Output_D8_Enable (void){
     // Set D8 as the output of CCP2
     RB3PPS = 0x0A;
 
+    TRISBbits.TRISB3 = 0;
+    
     PPSLOCK = 0x55; 
     PPSLOCK = 0xAA; 
     PPSLOCKbits.PPSLOCKED = 0x01; // lock PPS
@@ -204,3 +211,5 @@ void PWM2_LoadDutyValue(uint16_t dutyValue)
     // Returns the output status
     return(CCP2CONbits.OUT);
 }
+ 
+
