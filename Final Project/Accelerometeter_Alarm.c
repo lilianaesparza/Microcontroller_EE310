@@ -3,7 +3,8 @@
  * Board: PIC18F47K42 Curiosity Nano
  * Compiler: XC8
  */
-
+/* Youtube link: https://www.youtube.com/watch?v=YZSkxaTwrrQ 
+*/
 #include <xc.h>
 #include <stdint.h>
 #include <stdbool.h>
